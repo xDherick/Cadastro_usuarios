@@ -1,0 +1,50 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    background-color: #f1f5f9;
+  }
+}
+
+@layer components {
+  /* Botão primário reutilizável */
+  .btn-primary {
+    @apply w-full py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700
+           text-white font-semibold text-[15px] border-none cursor-pointer
+           transition-opacity duration-200 hover:opacity-90 disabled:opacity-60;
+  }
+
+  /* Input padrão */
+  .input-field {
+    @apply w-full px-3.5 py-[11px] rounded-xl border-[1.5px] border-slate-200
+           bg-slate-50 text-slate-900 text-[15px] outline-none
+           focus:border-brand-500 transition-colors duration-200;
+  }
+
+  /* Input com erro */
+  .input-error {
+    @apply border-red-400 focus:border-red-400;
+  }
+
+  /* Card base */
+  .card {
+    @apply bg-white rounded-2xl shadow-sm;
+  }
+
+  /* Badge de role */
+  .badge-admin {
+    @apply px-3 py-1 rounded-full text-xs font-semibold bg-brand-100 text-brand-700;
+  }
+  .badge-user {
+    @apply px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700;
+  }
+}
