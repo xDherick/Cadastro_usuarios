@@ -2,6 +2,7 @@
 const { Router } = require('express');
 const { body } = require('express-validator');
 const { register, login, refresh, logout, logoutAll, me } = require('../controllers/auth.controller');
+const { forgotPassword, resetPassword, validateResetToken } = require('../controllers/password.controller');
 const { authenticate } = require('../middleware/auth.middleware');
 const { validate } = require('../middleware/validate.middleware');
 
@@ -24,8 +25,13 @@ router.post('/login',    loginRules,    validate, login);
 router.post('/refresh',  refresh);
 router.post('/logout',   logout);
 
+// Recuperação de senha
+router.post('/forgot-password',         body('email').isEmail().normalizeEmail(), validate, forgotPassword);
+router.post('/reset-password',          resetPassword);
+router.get('/validate-reset-token',     validateResetToken);
+
 // Protegidas
-router.get('/me',             authenticate, me);
-router.post('/logout-all',    authenticate, logoutAll);
+router.get('/me',           authenticate, me);
+router.post('/logout-all',  authenticate, logoutAll);
 
 module.exports = router;

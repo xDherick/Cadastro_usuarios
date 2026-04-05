@@ -84,7 +84,8 @@ export default function Login() {
         </form>
 
         <p className="text-center mt-6 text-sm text-slate-500">
-          Não tem conta?{' '}
+          <Link to="/forgot-password" className="text-slate-500 text-sm hover:underline block text-center mb-4">Esqueci minha senha</Link>
+        Não tem conta?{' '}
           <Link to="/register" className="text-brand-600 font-semibold hover:underline">Cadastre-se</Link>
         </p>
       </div>

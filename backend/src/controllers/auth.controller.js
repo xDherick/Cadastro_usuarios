@@ -10,6 +10,7 @@ const {
 } = require('../services/token.service');
 
 const prisma = new PrismaClient();
+const audit = require('../services/audit.service');
 
 // POST /api/auth/register
 const register = async (req, res, next) => {
@@ -30,6 +31,14 @@ const register = async (req, res, next) => {
 
     const accessToken  = generateAccessToken(user.id, user.role);
     const refreshToken = await generateRefreshToken(user.id);
+
+    await audit.log({
+      actorId:    user.id,
+      actorName:  user.name,
+      actorEmail: user.email,
+      action:     'USER_CREATED',
+      target:     { id: user.id, name: user.name, email: user.email },
+    });
 
     return res.status(201).json({
       message: 'Usuário cadastrado com sucesso!',

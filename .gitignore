@@ -1,4 +1,11 @@
 # ========================
+# Uploads de usuários
+# (mantém a pasta, ignora o conteúdo)
+# ========================
+backend/uploads/avatars/*
+!backend/uploads/avatars/.gitkeep
+
+# ========================
 # Dependências
 # ========================
 node_modules/
