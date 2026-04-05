@@ -111,12 +111,3 @@ Para criar o primeiro admin, rode no psql ou Prisma Studio:
 UPDATE users SET role = 'ADMIN' WHERE email = 'seu@email.com';
 ```
 Ou via Prisma Studio: `npm run db:studio`
-
----
-
-## 🗺️ Próximas fases
-
-- [ ] **Fase 2:** Refresh tokens + logout seguro
-- [ ] **Fase 3:** Upload de avatar de perfil
-- [ ] **Fase 4:** Recuperação de senha por e-mail
-- [ ] **Fase 5:** Auditoria de ações (logs)
