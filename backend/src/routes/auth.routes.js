@@ -1,4 +1,3 @@
-// src/routes/auth.routes.js
 const { Router } = require('express');
 const { body } = require('express-validator');
 const { register, login, refresh, logout, logoutAll, me } = require('../controllers/auth.controller');

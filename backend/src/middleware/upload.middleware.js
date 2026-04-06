@@ -1,4 +1,3 @@
-// src/middleware/upload.middleware.js
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');

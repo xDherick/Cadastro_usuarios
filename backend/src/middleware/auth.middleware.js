@@ -1,4 +1,3 @@
-// src/middleware/auth.middleware.js
 const jwt = require('jsonwebtoken');
 
 // Verifica se o token JWT é válido
