@@ -1,4 +1,3 @@
-// src/controllers/audit.controller.js
 const { getLogs } = require('../services/audit.service');
 
 // GET /api/audit

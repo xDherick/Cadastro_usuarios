@@ -1,41 +1,17 @@
-// src/pages/Admin.jsx
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
-// ─── Configuração de badges por ação ───────────────────────────────────────
-const ACTION_CONFIG = {
-  USER_CREATED:     { label: 'Criado',       bg: 'bg-green-100',  text: 'text-green-700'  },
-  USER_UPDATED:     { label: 'Editado',      bg: 'bg-blue-100',   text: 'text-blue-700'   },
-  USER_DELETED:     { label: 'Removido',     bg: 'bg-red-100',    text: 'text-red-600'    },
-  USER_ACTIVATED:   { label: 'Ativado',      bg: 'bg-teal-100',   text: 'text-teal-700'   },
-  USER_DEACTIVATED: { label: 'Desativado',   bg: 'bg-amber-100',  text: 'text-amber-700'  },
-};
+export default function Admin() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
-function ActionBadge({ action }) {
-  const cfg = ACTION_CONFIG[action] || { label: action, bg: 'bg-slate-100', text: 'text-slate-600' };
-  return (
-    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
-      {cfg.label}
-    </span>
-  );
-}
-
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
-
-// ─── Aba Usuários ───────────────────────────────────────────────────────────
-function UsersTab() {
-  const [users, setUsers]           = useState([]);
+  const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
-  const [search, setSearch]         = useState('');
-  const [loading, setLoading]       = useState(true);
-  const [deleting, setDeleting]     = useState(null);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(null);
 
   const fetchUsers = useCallback(async (page = 1, q = search) => {
     setLoading(true);
@@ -43,252 +19,196 @@ function UsersTab() {
       const { data } = await api.get('/users', { params: { page, limit: 10, search: q } });
       setUsers(data.users);
       setPagination(data.pagination);
-    } finally { setLoading(false); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, [search]);
 
   useEffect(() => { fetchUsers(1); }, []);
 
-  const handleSearch = (e) => { e.preventDefault(); fetchUsers(1, search); };
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchUsers(1, search);
+  };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Remover "${name}"?`)) return;
+    if (!window.confirm(`Remover o usuário "${name}"?`)) return;
     setDeleting(id);
     try {
       await api.delete(`/users/${id}`);
       fetchUsers(pagination.page);
     } catch (err) {
-      alert(err.response?.data?.message || 'Erro ao remover.');
-    } finally { setDeleting(null); }
+      alert(err.response?.data?.message || 'Erro ao remover usuário.');
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const toggleActive = async (user) => {
     try {
       await api.patch(`/users/${user.id}`, { active: !user.active });
       fetchUsers(pagination.page);
-    } catch (err) { alert(err.response?.data?.message || 'Erro.'); }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erro ao atualizar usuário.');
+    }
   };
-
-  return (
-    <>
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-        <p className="text-sm text-slate-500">{pagination.total} usuário(s)</p>
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <input value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome ou e-mail..."
-            className="input-field w-72" />
-          <button type="submit" className="px-5 py-2.5 rounded-xl bg-brand-600 text-white font-semibold text-sm hover:bg-brand-700 transition-colors">
-            Buscar
-          </button>
-        </form>
-      </div>
-
-      <div className="card overflow-hidden">
-        {loading ? <p className="text-center text-slate-400 py-12">Carregando...</p> :
-         users.length === 0 ? <p className="text-center text-slate-400 py-12">Nenhum usuário encontrado.</p> : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                {['Nome', 'E-mail', 'Função', 'Status', 'Cadastro', 'Ações'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
-                        {u.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="font-medium text-slate-800 text-sm">{u.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-500">{u.email}</td>
-                  <td className="px-4 py-3">
-                    <span className={u.role === 'ADMIN' ? 'badge-admin' : 'badge-user'}>
-                      {u.role === 'ADMIN' ? 'Admin' : 'Usuário'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button onClick={() => toggleActive(u)}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold border-none cursor-pointer transition-colors ${u.active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-600 hover:bg-red-200'}`}>
-                      {u.active ? '● Ativo' : '● Inativo'}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-400">
-                    {new Date(u.createdAt).toLocaleDateString('pt-BR')}
-                  </td>
-                  <td className="px-4 py-3">
-                    <button onClick={() => handleDelete(u.id, u.name)} disabled={deleting === u.id}
-                      className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition-colors disabled:opacity-50">
-                      {deleting === u.id ? '...' : 'Remover'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {pagination.totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
-          {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
-            <button key={p} onClick={() => fetchUsers(p)}
-              className={`w-9 h-9 rounded-lg border text-sm font-medium transition-colors ${p === pagination.page ? 'bg-brand-600 border-brand-600 text-white' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-              {p}
-            </button>
-          ))}
-        </div>
-      )}
-    </>
-  );
-}
-
-// ─── Aba Auditoria ──────────────────────────────────────────────────────────
-function AuditTab() {
-  const [logs, setLogs]             = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
-  const [actionFilter, setActionFilter] = useState('');
-  const [loading, setLoading]       = useState(true);
-
-  const fetchLogs = useCallback(async (page = 1, action = actionFilter) => {
-    setLoading(true);
-    try {
-      const { data } = await api.get('/audit', { params: { page, limit: 20, action } });
-      setLogs(data.logs);
-      setPagination(data.pagination);
-    } finally { setLoading(false); }
-  }, [actionFilter]);
-
-  useEffect(() => { fetchLogs(1); }, []);
-
-  const handleFilterChange = (e) => {
-    setActionFilter(e.target.value);
-    fetchLogs(1, e.target.value);
-  };
-
-  return (
-    <>
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-        <p className="text-sm text-slate-500">{pagination.total} registro(s)</p>
-        <select value={actionFilter} onChange={handleFilterChange}
-          className="input-field w-52">
-          <option value="">Todas as ações</option>
-          {Object.entries(ACTION_CONFIG).map(([key, cfg]) => (
-            <option key={key} value={key}>{cfg.label}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="card overflow-hidden">
-        {loading ? <p className="text-center text-slate-400 py-12">Carregando...</p> :
-         logs.length === 0 ? <p className="text-center text-slate-400 py-12">Nenhum registro encontrado.</p> : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                {['Quando', 'Ação', 'Executado por', 'Afetou', 'Detalhes'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => (
-                <tr key={log.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">
-                    {formatDate(log.createdAt)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <ActionBadge action={log.action} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-sm font-medium text-slate-800">{log.actorName}</p>
-                    <p className="text-xs text-slate-400">{log.actorEmail}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    {log.targetName ? (
-                      <>
-                        <p className="text-sm font-medium text-slate-800">{log.targetName}</p>
-                        <p className="text-xs text-slate-400">{log.targetEmail}</p>
-                      </>
-                    ) : (
-                      <span className="text-xs text-slate-300">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-400">
-                    {log.details?.changedFields?.length > 0
-                      ? `Campos: ${log.details.changedFields.join(', ')}`
-                      : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {pagination.totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
-          {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
-            <button key={p} onClick={() => fetchLogs(p)}
-              className={`w-9 h-9 rounded-lg border text-sm font-medium transition-colors ${p === pagination.page ? 'bg-brand-600 border-brand-600 text-white' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
-              {p}
-            </button>
-          ))}
-        </div>
-      )}
-    </>
-  );
-}
-
-// ─── Página Admin principal ─────────────────────────────────────────────────
-export default function Admin() {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('users');
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
-    <div className="min-h-screen bg-slate-100 font-sans">
-      <header className="bg-white border-b border-slate-200 px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-600 to-brand-700 text-white font-bold text-sm flex items-center justify-center">
-            US
-          </div>
-          <span className="font-semibold text-slate-900">Painel Admin</span>
+    <div style={styles.page}>
+      <header style={styles.header}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={styles.logo}>US</div>
+          <span style={styles.headerTitle}>Painel Admin</span>
         </div>
-        <nav className="flex items-center gap-3">
-          <Link to="/dashboard" className="text-brand-600 text-sm font-medium hover:underline">Dashboard</Link>
-          <button onClick={handleLogout} className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-500 text-sm hover:bg-slate-50 transition-colors">
-            Sair
-          </button>
+        <nav style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <Link to="/dashboard" style={styles.navLink}>Dashboard</Link>
+          <button onClick={handleLogout} style={styles.logoutBtn}>Sair</button>
         </nav>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        <h2 className="text-xl font-bold text-slate-900 mb-6">Administração</h2>
-
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-white rounded-xl p-1 w-fit shadow-sm border border-slate-100">
-          {[
-            { id: 'users', label: '👥 Usuários' },
-            { id: 'audit', label: '📋 Auditoria' },
-          ].map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}>
-              {tab.label}
-            </button>
-          ))}
+      <main style={styles.main}>
+        <div style={styles.topBar}>
+          <div>
+            <h2 style={styles.pageTitle}>Usuários</h2>
+            <p style={styles.pageSub}>{pagination.total} usuário(s) cadastrado(s)</p>
+          </div>
+          <form onSubmit={handleSearch} style={styles.searchForm}>
+            <input
+              value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por nome ou e-mail..."
+              style={styles.searchInput}
+            />
+            <button type="submit" style={styles.searchBtn}>Buscar</button>
+          </form>
         </div>
 
-        {activeTab === 'users' ? <UsersTab /> : <AuditTab />}
+        <div style={styles.tableWrap}>
+          {loading ? (
+            <div style={styles.loadingMsg}>Carregando...</div>
+          ) : users.length === 0 ? (
+            <div style={styles.loadingMsg}>Nenhum usuário encontrado.</div>
+          ) : (
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  {['Nome', 'E-mail', 'Função', 'Status', 'Cadastro', 'Ações'].map((h) => (
+                    <th key={h} style={styles.th}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <tr key={u.id} style={styles.tr}>
+                    <td style={styles.td}>
+                      <div style={styles.userCell}>
+                        <div style={styles.miniAvatar}>{u.name.charAt(0).toUpperCase()}</div>
+                        <span style={styles.userName}>{u.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ ...styles.td, color: '#64748b' }}>{u.email}</td>
+                    <td style={styles.td}>
+                      <span style={{ ...styles.roleBadge, background: u.role === 'ADMIN' ? '#dbeafe' : '#f0fdf4', color: u.role === 'ADMIN' ? '#1d4ed8' : '#16a34a' }}>
+                        {u.role === 'ADMIN' ? 'Admin' : 'Usuário'}
+                      </span>
+                    </td>
+                    <td style={styles.td}>
+                      <button onClick={() => toggleActive(u)} style={{ ...styles.statusBtn, background: u.active ? '#dcfce7' : '#fee2e2', color: u.active ? '#16a34a' : '#dc2626' }}>
+                        {u.active ? '● Ativo' : '● Inativo'}
+                      </button>
+                    </td>
+                    <td style={{ ...styles.td, color: '#94a3b8', fontSize: '13px' }}>
+                      {new Date(u.createdAt).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td style={styles.td}>
+                      <button
+                        onClick={() => handleDelete(u.id, u.name)}
+                        disabled={deleting === u.id}
+                        style={styles.deleteBtn}
+                      >
+                        {deleting === u.id ? '...' : 'Remover'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {pagination.totalPages > 1 && (
+          <div style={styles.pagination}>
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => fetchUsers(p)}
+                style={{ ...styles.pageBtn, background: p === pagination.page ? '#2563eb' : '#fff', color: p === pagination.page ? '#fff' : '#374151' }}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
 }
+
+const styles = {
+  page: { minHeight: '100vh', background: '#f1f5f9', fontFamily: "'Segoe UI', system-ui, sans-serif" },
+  header: {
+    background: '#fff', borderBottom: '1px solid #e2e8f0',
+    padding: '0 32px', height: '64px',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  },
+  logo: {
+    width: '38px', height: '38px', borderRadius: '10px',
+    background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+    color: '#fff', fontWeight: '700', fontSize: '15px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  headerTitle: { fontWeight: '600', color: '#0f172a', fontSize: '16px' },
+  navLink: { color: '#2563eb', fontWeight: '500', textDecoration: 'none', fontSize: '14px' },
+  logoutBtn: {
+    padding: '7px 16px', borderRadius: '8px', border: '1.5px solid #e2e8f0',
+    background: 'transparent', color: '#64748b', cursor: 'pointer', fontSize: '14px',
+  },
+  main: { maxWidth: '1100px', margin: '0 auto', padding: '40px 24px' },
+  topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' },
+  pageTitle: { fontSize: '22px', fontWeight: '700', color: '#0f172a', margin: '0 0 4px' },
+  pageSub: { fontSize: '14px', color: '#64748b', margin: 0 },
+  searchForm: { display: 'flex', gap: '8px' },
+  searchInput: {
+    padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #e2e8f0',
+    fontSize: '14px', outline: 'none', minWidth: '280px', background: '#fff',
+  },
+  searchBtn: {
+    padding: '10px 20px', borderRadius: '10px', background: '#2563eb',
+    color: '#fff', fontWeight: '600', border: 'none', cursor: 'pointer', fontSize: '14px',
+  },
+  tableWrap: { background: '#fff', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' },
+  loadingMsg: { padding: '40px', textAlign: 'center', color: '#94a3b8' },
+  table: { width: '100%', borderCollapse: 'collapse' },
+  th: { padding: '14px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' },
+  tr: { borderBottom: '1px solid #f8fafc' },
+  td: { padding: '14px 16px', fontSize: '14px', color: '#0f172a', verticalAlign: 'middle' },
+  userCell: { display: 'flex', alignItems: 'center', gap: '10px' },
+  miniAvatar: {
+    width: '32px', height: '32px', borderRadius: '50%',
+    background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+    color: '#fff', fontWeight: '700', fontSize: '13px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  userName: { fontWeight: '500' },
+  roleBadge: { padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' },
+  statusBtn: { padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', border: 'none', cursor: 'pointer' },
+  deleteBtn: {
+    padding: '6px 14px', borderRadius: '8px', border: '1.5px solid #fecaca',
+    background: 'transparent', color: '#dc2626', fontSize: '13px', fontWeight: '500', cursor: 'pointer',
+  },
+  pagination: { display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '24px' },
+  pageBtn: { width: '36px', height: '36px', borderRadius: '8px', border: '1.5px solid #e2e8f0', cursor: 'pointer', fontWeight: '500', fontSize: '14px' },
+};
