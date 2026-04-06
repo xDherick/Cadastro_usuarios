@@ -1,3 +1,4 @@
+// src/controllers/password.controller.js
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');

@@ -1,3 +1,4 @@
+// src/services/mail.service.js
 const nodemailer = require('nodemailer');
 
 // Cria o transporter Gmail uma única vez
@@ -5,7 +6,7 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS, 
+    pass: process.env.MAIL_PASS, // Senha de app, não a senha da conta
   },
 });
 
