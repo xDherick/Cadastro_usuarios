@@ -1,34 +1,13 @@
 // src/services/mail.service.js
-const nodemailer = require('nodemailer');
-
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // STARTTLS na porta 587
-    auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
-};
+// Usa Resend via HTTP — funciona no Render gratuito (sem bloqueio de porta SMTP)
 
 const sendPasswordResetEmail = async ({ to, name, resetUrl }) => {
-  const transporter = createTransporter();
-
   const html = `
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Recuperação de senha</title>
     </head>
     <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;">
       <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
@@ -82,22 +61,34 @@ const sendPasswordResetEmail = async ({ to, name, resetUrl }) => {
     </html>
   `;
 
-  await transporter.sendMail({
-    from: process.env.MAIL_FROM || `"User System" <${process.env.MAIL_USER}>`,
-    to,
-    subject: 'Redefinição de senha — User System',
-    html,
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: process.env.MAIL_FROM || 'User System <onboarding@resend.dev>',
+      to,
+      subject: 'Redefinição de senha — User System',
+      html,
+    }),
   });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`Resend error: ${JSON.stringify(error)}`);
+  }
+
+  return response.json();
 };
 
 const verifyMailConnection = async () => {
-  try {
-    const transporter = createTransporter();
-    await transporter.verify();
-    console.log('✅ Conexão com Gmail estabelecida.');
-  } catch (err) {
-    console.warn('⚠️  Gmail não configurado:', err.message);
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('⚠️  RESEND_API_KEY não configurada.');
+    return;
   }
+  console.log('✅ Resend configurado.');
 };
 
 module.exports = { sendPasswordResetEmail, verifyMailConnection };
