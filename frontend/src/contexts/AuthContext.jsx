@@ -1,3 +1,4 @@
+// src/contexts/AuthContext.jsx
 import { createContext, useContext, useState, useCallback } from 'react';
 import api from '../services/api';
 
@@ -9,30 +10,57 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null;
   });
 
-  const login = useCallback(async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('token', data.token);
+  const saveSession = (data) => {
+    localStorage.setItem('accessToken',  data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
+  };
+
+  const login = useCallback(async (email, password) => {
+    const { data } = await api.post('/auth/login', { email, password });
+    saveSession(data);
     return data.user;
   }, []);
 
   const register = useCallback(async (name, email, password) => {
     const { data } = await api.post('/auth/register', { name, email, password });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setUser(data.user);
+    saveSession(data);
     return data.user;
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+  // Logout: revoga o refresh token no backend e limpa o localStorage
+  const logout = useCallback(async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      await api.post('/auth/logout', { refreshToken });
+    } catch {
+      // Mesmo se falhar, limpa localmente
+    } finally {
+      localStorage.clear();
+      setUser(null);
+    }
+  }, []);
+
+  // Encerra TODAS as sessões do usuário (todos os dispositivos)
+  const logoutAll = useCallback(async () => {
+    try {
+      await api.post('/auth/logout-all');
+    } finally {
+      localStorage.clear();
+      setUser(null);
+    }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAdmin: user?.role === 'ADMIN' }}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      register,
+      logout,
+      logoutAll,
+      isAdmin: user?.role === 'ADMIN',
+    }}>
       {children}
     </AuthContext.Provider>
   );

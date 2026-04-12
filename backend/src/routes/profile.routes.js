@@ -1,3 +1,4 @@
+// src/routes/profile.routes.js
 const { Router } = require('express');
 const { getProfile, updateProfile, removeAvatar } = require('../controllers/profile.controller');
 const { authenticate } = require('../middleware/auth.middleware');

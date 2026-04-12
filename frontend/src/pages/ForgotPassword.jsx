@@ -1,3 +1,4 @@
+// src/pages/ForgotPassword.jsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';

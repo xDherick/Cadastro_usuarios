@@ -1,3 +1,4 @@
+// src/routes/user.routes.js
 const { Router } = require('express');
 const { body } = require('express-validator');
 const { listUsers, getUser, updateUser, deleteUser } = require('../controllers/user.controller');

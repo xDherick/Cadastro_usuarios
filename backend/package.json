@@ -4,9 +4,10 @@
   "description": "API de cadastro e autenticação de usuários",
   "main": "src/server.js",
   "scripts": {
-    "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "db:migrate": "prisma migrate dev",
+    "dev": "nodemon src/server.js",
+    "build": "npx prisma generate",
+    "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio"
   },
   "dependencies": {

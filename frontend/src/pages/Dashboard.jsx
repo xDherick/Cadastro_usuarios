@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -32,6 +33,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans">
+      {/* Header */}
       <header className="bg-white border-b border-slate-200 px-8 h-16 flex items-center justify-between">
         <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-brand-700 text-white font-bold text-base">
           US
@@ -53,6 +55,7 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-10">
+        {/* Welcome card */}
         <div className="card p-7 flex flex-wrap items-center gap-5 mb-6">
           <Link to="/profile" className="flex-shrink-0">
             {avatarSrc ? (
@@ -72,6 +75,7 @@ export default function Dashboard() {
           </span>
         </div>
 
+        {/* Info grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <InfoCard icon="🪪" title="Seu ID" value={user.id.slice(0, 8) + '...'} />
           <InfoCard icon="🔑" title="Função" value={user.role} />
@@ -86,6 +90,10 @@ export default function Dashboard() {
               </div>
             </button>
           )}
+        </div>
+
+        <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
+          🔒 Sua sessão é renovada automaticamente por até <strong>7 dias</strong>. Use <em>"Sair de todos"</em> para encerrar em todos os dispositivos.
         </div>
       </main>
     </div>

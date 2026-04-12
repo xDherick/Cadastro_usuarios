@@ -1,3 +1,4 @@
+// src/routes/audit.routes.js
 const { Router } = require('express');
 const { listLogs } = require('../controllers/audit.controller');
 const { authenticate, requireAdmin } = require('../middleware/auth.middleware');
