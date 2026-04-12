@@ -4,15 +4,18 @@ const nodemailer = require('nodemailer');
 const createTransporter = () => {
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // SSL
+    port: 587,
+    secure: false, // STARTTLS na porta 587
     auth: {
       user: process.env.MAIL_USER,
       pass: process.env.MAIL_PASS,
     },
     tls: {
-      rejectUnauthorized: false, 
+      rejectUnauthorized: false,
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
 };
 
@@ -46,8 +49,7 @@ const sendPasswordResetEmail = async ({ to, name, resetUrl }) => {
                     Clique no botão abaixo para criar uma nova senha.
                   </p>
                   <div style="text-align:center;margin-bottom:28px;">
-                    <a href="${resetUrl}"
-                      style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#ffffff;text-decoration:none;border-radius:10px;font-size:15px;font-weight:600;">
+                    <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#ffffff;text-decoration:none;border-radius:10px;font-size:15px;font-weight:600;">
                       Redefinir minha senha
                     </a>
                   </div>
